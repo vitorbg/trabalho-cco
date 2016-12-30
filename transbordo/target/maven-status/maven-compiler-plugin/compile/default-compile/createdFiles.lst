@@ -1,0 +1,7 @@
+udi48/transbordo/dominio/Transbordo.class
+udi48/transbordo/MainApp.class
+udi48/transbordo/dominio/Origem.class
+udi48/transbordo/dominio/Destino.class
+udi48/transbordo/dominio/PassoCaminho.class
+udi48/transbordo/FXMLController.class
+udi48/transbordo/transporte/Transporte.class
