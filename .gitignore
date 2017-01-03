@@ -1,0 +1,21 @@
+#Arquivos Genericos#
+*.lck
+*.~
+*.lock
+*.DS_Store
+*.swp
+*.out
+
+#Arquivos Readme.md~#
+*.md~
+*README.md~
+
+#Arquivos do gitignore~#
+*.gitignore~
+
+#Arquivos de log#
+*.log
+
+#Arquivos Compilados#
+
+/transbordo/target/

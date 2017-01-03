@@ -35,8 +35,10 @@ public class Transporte {
     private double vetorV[];
     private boolean vetorUVisitado[];
     private boolean vetorVVisitado[];
+    private boolean matrizVisitado[][];
     private double vetorOferta[];
     private double vetorDemanda[];
+    private ArrayList<PassoCaminho> caminho;
 
     public Transporte(List<Origem> origem, List<Destino> destino, List<Transbordo> transbordo) {
         this.origem = origem;
@@ -135,6 +137,7 @@ public class Transporte {
 
         matrizCusto = new double[linhas][colunas];
         matrizSolucao = new double[linhas][colunas];
+        matrizVisitado = new boolean[linhas][colunas];
         vetorU = new double[linhas];
         vetorV = new double[colunas];
         vetorOferta = new double[linhas];
@@ -230,7 +233,30 @@ public class Transporte {
     public void calculaOtimalidade() {
 
         calculaVetoresUV();
+        encontraCiclo();
 
+        boolean variavelNegativa = true;
+        PassoCaminho indiceVariavelNegativa = caminho.get(1);
+
+        for (int i = 1; i < caminho.size(); i++) {
+            if (i % 2 != 0) {
+                PassoCaminho aux = caminho.get(i);
+                if (aux.getValor() < indiceVariavelNegativa.getValor()) {
+                    indiceVariavelNegativa = aux;
+                }
+
+            }
+
+//            if (variavelNegativa) {
+//                caminho.get(i);
+//            }
+        }
+
+        System.out.println("VARIAVEL A SAIR: " + indiceVariavelNegativa.getI() + "    " + indiceVariavelNegativa.getJ() + "        " + indiceVariavelNegativa.getValor());
+
+    }
+
+    private void encontraCiclo() {
         int i;
         int j;
         int iMenorElemento = 0;
@@ -255,54 +281,59 @@ public class Transporte {
         }
         System.out.println("RESS: i= " + iMenorElemento + "  j= " + jMenorElemento + "    VALOR: " + resultado);
 
-        ArrayList<PassoCaminho> caminho = new ArrayList<>();
+        caminho = new ArrayList<>();
 
         PassoCaminho passoInicial = new PassoCaminho(iMenorElemento, jMenorElemento, resultado);
         caminho.add(passoInicial);
+
+        matrizSolucao[iMenorElemento][jMenorElemento] = resultado;
 
         boolean aindaTemCaminho = true;
         int linha;
         int coluna;
         int c = 0;
         int proximaLinha = passoInicial.getI();//INICIAL
+        matrizVisitado[passoInicial.getI()][passoInicial.getJ()] = true;
 
-        PassoCaminho procuraLinha;
-        PassoCaminho procuraColuna;
+        PassoCaminho procuraLinha = null;
+        PassoCaminho procuraColuna = null;
 
         while (aindaTemCaminho) {
 
             procuraLinha = verificaElementoLinha(proximaLinha);
-            procuraColuna = verificaElementoColuna(procuraLinha.getJ());
 
-            if (procuraLinha.getI() == passoInicial.getI() && procuraLinha.getJ() == passoInicial.getJ()) {
-                aindaTemCaminho = false;
-            } else {
-                if (procuraColuna.getI() == passoInicial.getI() && procuraColuna.getJ() == passoInicial.getJ()) {
+            if (procuraLinha != null) {
+                matrizVisitado[procuraLinha.getI()][procuraLinha.getJ()] = true;
+
+                if (procuraLinha.getI() == passoInicial.getI() && procuraLinha.getJ() == passoInicial.getJ()) {
                     aindaTemCaminho = false;
                 } else {
-                    caminho.add(procuraLinha);
-                    caminho.add(procuraColuna);
-                }
-            }
+                    procuraColuna = verificaElementoColuna(procuraLinha.getJ());
+                    if (procuraColuna != null) {
+                        matrizVisitado[procuraColuna.getI()][procuraColuna.getJ()] = true;
 
-            proximaLinha = procuraColuna.getI();
+                        if (procuraColuna.getI() == passoInicial.getI() && procuraColuna.getJ() == passoInicial.getJ()) {
+                            aindaTemCaminho = false;
+                        } else {
+                            caminho.add(procuraLinha);
+                            caminho.add(procuraColuna);
+                        }
+
+                        proximaLinha = procuraColuna.getI();
+
+                    } else {
+                        aindaTemCaminho = false;
+                    }
+                    mostraMatrizVisitado();
+                }
+            } else {
+                aindaTemCaminho = false;
+            }
+            mostraMatrizVisitado();
 
             mostraCaminho(caminho);
 
-            c++;
-            if (c > 4) {
-                aindaTemCaminho = false;
-            }
-
         }
-        for (i = 0; i < linhas; i++) {
-            for (j = 0; j < colunas; j++) {
-                if (matrizSolucao[i][j] != -1) {
-
-                }
-            }
-        }
-
     }
 
     private void mostraCaminho(ArrayList<PassoCaminho> caminho) {
@@ -318,7 +349,7 @@ public class Transporte {
         System.out.println("VERIFICA ELEMENTO LINHA LINHA LINHA = " + linha);
 
         for (int j = 0; j < colunas; j++) {
-            if (matrizSolucao[linha][j] != -1) {
+            if (matrizSolucao[linha][j] != -1 && matrizVisitado[linha][j] == false) {
                 p = new PassoCaminho(linha, j, matrizSolucao[linha][j]);
                 System.out.println("VERIFICA ELEMENTO LINHA = " + p.getI() + "   " + p.getJ());
 
@@ -334,12 +365,15 @@ public class Transporte {
                 }
             }
         } else {
-            p = caminhosLinha.get(0);
+            if (caminhosLinha.isEmpty()) {
+                p = null;
+            } else {
+                p = caminhosLinha.get(0);
+            }
         }
 
-        System.out.println("VERIFICA ELEMENTO LINHA = " + p.getI() + "   " + p.getJ()
-        );
-
+//        System.out.println("VERIFICA ELEMENTO LINHA = " + p.getI() + "   " + p.getJ()
+//        );
         return p;
     }
 
@@ -348,7 +382,7 @@ public class Transporte {
         ArrayList<PassoCaminho> caminhosColuna = new ArrayList<>();
 
         for (int i = 0; i < linhas; i++) {
-            if (matrizSolucao[i][coluna] != -1) {
+            if (matrizSolucao[i][coluna] != -1 && matrizVisitado[i][coluna] == false) {
                 p = new PassoCaminho(i, coluna, matrizSolucao[i][coluna]);
                 caminhosColuna.add(p);
             }
@@ -358,12 +392,17 @@ public class Transporte {
             p = caminhosColuna.get(0);
             for (int j = 0; j < caminhosColuna.size(); j++) {
                 PassoCaminho c = caminhosColuna.get(j);
+
                 if (c.getValor() <= p.getValor()) {
                     p = c;
                 }
             }
         } else {
-            p = caminhosColuna.get(0);
+            if (caminhosColuna.isEmpty()) {
+                p = null;
+            } else {
+                p = caminhosColuna.get(0);
+            }
         }
 
         return p;
@@ -410,6 +449,21 @@ public class Transporte {
 
                 }
             }
+        }
+    }
+
+    public void mostraMatrizVisitado() {
+        int i;
+        int j;
+
+        System.out.println("  ");
+        System.out.println("Matriz de Visitado");
+
+        for (i = 0; i < linhas; i++) {
+            for (j = 0; j < colunas; j++) {
+                System.out.print("           " + matrizVisitado[i][j]);
+            }
+            System.out.println("\n");
         }
     }
 
@@ -511,6 +565,11 @@ public class Transporte {
         for (int i = 0; i < colunas; i++) {
             vetorV[i] = 0;
             vetorVVisitado[i] = false;
+        }
+        for (int i = 0; i < linhas; i++) {
+            for (int j = 0; j < colunas; j++) {
+                matrizVisitado[i][j] = false;
+            }
         }
 
         matrizSolucao[0][0] = 5;
