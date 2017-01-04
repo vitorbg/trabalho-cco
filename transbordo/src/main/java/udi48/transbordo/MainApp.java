@@ -36,7 +36,7 @@ public class MainApp extends Application {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-//        launch(args);
+        launch(args);
 
         Origem o1 = new Origem("Brasil", 300);
         Origem o2 = new Origem("Japao", 220);
