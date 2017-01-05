@@ -4,16 +4,15 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
+import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -31,6 +30,7 @@ public class FXMLController implements Initializable {
     private StackPane spEntrada;
     private ScrollPane scpPrincipal;
     private VBox vbPrincipal;
+    private VBox vbConteudo;
     private VBox vbEntrada;
     private VBox vbTransbordo;
     private GridPane gpCabecalho;
@@ -49,27 +49,34 @@ public class FXMLController implements Initializable {
     private Label lbOrigem;
     private Label lbDestino;
     private Label lbTransbordo;
+    private Label lbInstrucao1;
+    private Label lbInstrucao2;
     private TextField tfQtdOrigem;
     private TextField tfQtdDestino;
     private TextField tfQtdTransbordo;
     private Button btnGerar;
+    private Button btnCalcular;
     private Button btnExemplo1;
     private Button btnExemplo2;
     private Button btnExemplo3;
     private Pane paOrigem;
     private Pane paDestino;
     private Pane paTransbordo;
+    private Pane paInstrucao;
     private List<Origem> origem;
     private List<Destino> destino;
     private List<Transbordo> transbordo;
     private int qtdOrigem;
     private int qtdDestino;
     private int qtdTransbordo;
+    private TextArea taResultado;
+    private Transporte transporte;
 
     private void initComponents() {
         spEntrada = new StackPane();
         scpPrincipal = new ScrollPane();
         vbPrincipal = new VBox();
+        vbConteudo = new VBox();
         vbEntrada = new VBox();
         vbTransbordo = new VBox();
         gpCabecalho = new GridPane();
@@ -91,30 +98,37 @@ public class FXMLController implements Initializable {
         lbOrigem = new Label("Informações de ORIGEM");
         lbDestino = new Label("Informações de DESTINO");
         lbTransbordo = new Label("Informações de TRANSBORDO");
-        btnGerar = new Button("Gerar");
+        lbInstrucao1 = new Label("Instrução: Quando não houver ligação de um elemento a outro digite o valor 999999 (BIG M) ");
+        lbInstrucao2 = new Label("Instrução:");
+        btnGerar = new Button("Gerar Entrada");
+        btnCalcular = new Button("Calcular Solução");
         btnExemplo1 = new Button("Exemplo 1");
         btnExemplo2 = new Button("Exemplo 2");
         btnExemplo3 = new Button("Exemplo 3");
         paOrigem = new Pane(lbOrigem);
         paDestino = new Pane(lbDestino);
         paTransbordo = new Pane(lbTransbordo);
+        paInstrucao = new Pane(lbInstrucao1);
         origem = new ArrayList<>();
         destino = new ArrayList<>();
         transbordo = new ArrayList<>();
+        taResultado = new TextArea();
 
         stackPane.setMaxSize(ControleTamanhos.LARGURA_PRINCIPAL, ControleTamanhos.ALTURA_PRINCIPAL);
         stackPane.setMinSize(ControleTamanhos.LARGURA_PRINCIPAL, ControleTamanhos.ALTURA_PRINCIPAL);
-
+        stackPane.setPadding(new Insets(ControleTamanhos.ESPACAMENTO));
         scpPrincipal.setMaxSize(ControleTamanhos.LARGURA, ControleTamanhos.ALTURA);
         scpPrincipal.setMinSize(ControleTamanhos.LARGURA, ControleTamanhos.ALTURA);
-
+        taResultado.setMaxSize(ControleTamanhos.LARGURA, ControleTamanhos.ALTURA);
+        taResultado.setMinSize(ControleTamanhos.LARGURA, ControleTamanhos.ALTURA);
         gpCabecalho.setMaxWidth(ControleTamanhos.LARGURA);
         gpCabecalho.setMinWidth(ControleTamanhos.LARGURA);
+        vbPrincipal.setSpacing(ControleTamanhos.ESPACAMENTO);
 
-        stackPane.getChildren().addAll(scpPrincipal);
-        scpPrincipal.setContent(vbPrincipal);
-
-        vbPrincipal.getChildren().addAll(lbTitulo, gpCabecalho, spEntrada);
+        stackPane.getChildren().addAll(vbPrincipal);
+        vbPrincipal.getChildren().addAll(lbTitulo, paInstrucao, gpCabecalho, scpPrincipal);
+        scpPrincipal.setContent(vbConteudo);
+        vbConteudo.getChildren().addAll(spEntrada);
         //COLUNA LINHA
         gpCabecalho.add(lbQtdOrigem, 0, 0);
         gpCabecalho.add(tfQtdOrigem, 1, 0);
@@ -125,17 +139,145 @@ public class FXMLController implements Initializable {
         gpCabecalho.add(btnGerar, 6, 0);
         //
         gpCabecalho.add(btnExemplo1, 0, 1);
-        gpCabecalho.add(btnExemplo2, 1, 1);
-        gpCabecalho.add(btnExemplo3, 2, 1);
+        gpCabecalho.add(btnExemplo2, 2, 1);
+        gpCabecalho.add(btnExemplo3, 4, 1);
+        gpCabecalho.add(btnCalcular, 6, 1);
 
-        ajustaGridPaneEntrada(gpOrigem);
-        ajustaGridPaneEntrada(gpDestino);
-        ajustaPaneTitulo(paOrigem);
-        ajustaPaneTitulo(paDestino);
-        ajustaPaneTitulo(paTransbordo);
+        FXUtil.ajustaGridPaneEntrada(gpOrigem);
+        FXUtil.ajustaGridPaneEntrada(gpDestino);
+        FXUtil.ajustaPaneTitulo(paOrigem);
+        FXUtil.ajustaPaneTitulo(paDestino);
+        FXUtil.ajustaPaneTitulo(paTransbordo);
+        FXUtil.ajustaGridPaneCabecalho(gpCabecalho);
+        FXUtil.formataTextFieldNumerico(tfQtdOrigem);
+        FXUtil.formataTextFieldNumerico(tfQtdDestino);
+        FXUtil.formataTextFieldNumerico(tfQtdTransbordo);
+        FXUtil.ajustaPaneInstrucao(paInstrucao);
+    }
+
+    private void limpa() {
+        spEntrada.getChildren().clear();
+        gpOrigem.getChildren().clear();
+        gpDestino.getChildren().clear();
+        vbEntrada.getChildren().clear();
+        vbTransbordo.getChildren().clear();
+    }
+
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        initComponents();
+
+        btnGerar.addEventHandler(ActionEvent.ACTION, (ActionEvent actionEvent) -> {
+            qtdOrigem = Integer.valueOf(tfQtdOrigem.getText());
+            qtdDestino = Integer.valueOf(tfQtdDestino.getText());
+            qtdTransbordo = Integer.valueOf(tfQtdTransbordo.getText());
+            montaEntrada();
+        });
+        btnExemplo1.addEventHandler(ActionEvent.ACTION, (ActionEvent actionEvent) -> {
+            montaExemplo1();
+            transporte = new Transporte(origem, destino, transbordo);
+            transporte.calculaSolucaoBasicaFinal();
+            mostraResultado();
+        });
+        btnExemplo2.addEventHandler(ActionEvent.ACTION, (ActionEvent actionEvent) -> {
+
+        });
+        btnCalcular.addEventHandler(ActionEvent.ACTION, (ActionEvent actionEvent) -> {
+            buscaInformacoesEntrada();
+            mostraEntrada();
+            transporte = new Transporte(origem, destino, transbordo);
+            transporte.calculaSolucaoBasicaFinal();
+            mostraResultado();
+        });
+    }
+
+    private void validaCamposDigitados() {
+    }
+
+    private void mostraResultado() {
+        taResultado.clear();
+        limpa();
+        mostraEntrada();
+        spEntrada.getChildren().addAll(taResultado);
+
+    }
+
+    private void mostraEntrada() {
+        taResultado.appendText("VALORES DE ENTRADA ---------------------------------");
+        taResultado.appendText("\n");
+        String s = "------- ORIGEM ";
+        System.out.println(s);
+        taResultado.appendText(s);
+        taResultado.appendText("\n");
+        for (int i = 0; i < origem.size(); i++) {
+            String s1 = "--> Origem " + i;
+            String s2 = " nome: " + origem.get(i).getNome() + " oferta: " + origem.get(i).getOferta();
+            System.out.println(s1);
+            System.out.println(s2);
+            taResultado.appendText(s1);
+            taResultado.appendText("\n");
+            taResultado.appendText(s2);
+            taResultado.appendText("\n");
+        }
+        String s5 = "------- DESTINO ";
+        System.out.println(s5);
+        taResultado.appendText(s5);
+        taResultado.appendText("\n");
+        for (int i = 0; i < destino.size(); i++) {
+            String s3 = "--> Destino " + i;
+            String s4 = " nome: " + destino.get(i).getNome() + " demanda: " + destino.get(i).getDemanda();
+            System.out.println(s3);
+            System.out.println(s4);
+            taResultado.appendText(s3);
+            taResultado.appendText("\n");
+            taResultado.appendText(s4);
+            taResultado.appendText("\n");
+        }
+        String s6 = "------- TRANSBORDO ";
+        System.out.println(s6);
+        taResultado.appendText(s6);
+        taResultado.appendText("\n");
+        for (int i = 0; i < transbordo.size(); i++) {
+            String s7 = "--> Transbordo " + i;
+            String s8 = " nome: " + transbordo.get(i).getNome();
+            System.out.println(s7);
+            System.out.println(s8);
+            taResultado.appendText(s7);
+            taResultado.appendText("\n");
+            taResultado.appendText(s8);
+            taResultado.appendText("\n");
+            double[] custos = transbordo.get(i).getCustos();
+            int j = 0;
+            while (j < custos.length) {
+                for (int k = 0; k < origem.size(); k++) {
+                    String s9 = "Para Origem " + origem.get(k).getNome() + " : " + custos[j];
+                    System.out.println(s9);
+                    taResultado.appendText(s9);
+                    taResultado.appendText("\n");
+                    j++;
+                }
+                for (int k = 0; k < destino.size(); k++) {
+                    String s10 = "Para Destino " + destino.get(k).getNome() + " : " + custos[j];
+                    System.out.println(s10);
+                    taResultado.appendText(s10);
+                    taResultado.appendText("\n");
+                    j++;
+                }
+                for (int k = 0; k < transbordo.size(); k++) {
+                    String s11 = "Para Transbordo " + transbordo.get(k).getNome() + " : " + custos[j];
+                    System.out.println(s11);
+                    taResultado.appendText(s11);
+                    taResultado.appendText("\n");
+                    j++;
+                }
+            }
+            System.out.println(" ");
+            taResultado.appendText("\n");
+        }
     }
 
     private void montaEntrada() {
+        limpa();
         int i;
         int j;
         int k;
@@ -151,15 +293,16 @@ public class FXMLController implements Initializable {
                 i++;
             }
             pulaLinha++;
-            Label lbOrigem = new Label("Origem " + k + " Nome:");
-            Label lbOferta = new Label("Oferta:");
-            TextField tfOrigem = new TextField();
-            TextField tfOferta = new TextField();
+            Label lbOrigemAux = new Label("Origem " + k + " Nome:");
+            Label lbOfertaAux = new Label("Oferta:");
+            TextField tfOrigemAux = new TextField();
+            TextField tfOfertaAux = new TextField();
+            tfOfertaAux.setTextFormatter(FXUtil.textFormatterDouble());
             //COLUNA LINHA
-            gpOrigem.add(lbOrigem, j, i);
-            gpOrigem.add(tfOrigem, j + 1, i);
-            gpOrigem.add(lbOferta, j + 2, i);
-            gpOrigem.add(tfOferta, j + 3, i);
+            gpOrigem.add(lbOrigemAux, j, i);
+            gpOrigem.add(tfOrigemAux, j + 1, i);
+            gpOrigem.add(lbOfertaAux, j + 2, i);
+            gpOrigem.add(tfOfertaAux, j + 3, i);
             j = j + 4;
         }
 //DESTINO _---------------------------------------------------------------------        
@@ -177,6 +320,7 @@ public class FXMLController implements Initializable {
             Label lbDemandaAux = new Label("Demanda:");
             TextField tfDestinoAux = new TextField();
             TextField tfDemandaAux = new TextField();
+            tfDemandaAux.setTextFormatter(FXUtil.textFormatterDouble());
             //COLUNA LINHA
             gpDestino.add(lbDestinoAux, j, i);
             gpDestino.add(tfDestinoAux, j + 1, i);
@@ -190,9 +334,9 @@ public class FXMLController implements Initializable {
             GridPane gpOrigemTransbordo = new GridPane();
             GridPane gpDestinoTransbordo = new GridPane();
             GridPane gpTransbordoTransbordo = new GridPane();
-            ajustaGridPaneEntrada(gpOrigemTransbordo);
-            ajustaGridPaneEntrada(gpDestinoTransbordo);
-            ajustaGridPaneTransbordo(gpTransbordoTransbordo);
+            FXUtil.ajustaGridPaneEntrada(gpOrigemTransbordo);
+            FXUtil.ajustaGridPaneEntrada(gpDestinoTransbordo);
+            FXUtil.ajustaGridPaneTransbordo(gpTransbordoTransbordo);
             i = 0;
             j = 0;
             pulaLinha = 0;
@@ -205,6 +349,7 @@ public class FXMLController implements Initializable {
                 pulaLinha++;
                 Label lbOrigem = new Label("Custo p/ Origem " + k + ":");
                 TextField tfOrigem = new TextField();
+                tfOrigem.setTextFormatter(FXUtil.textFormatterDouble());
                 //COLUNA LINHA
                 gpOrigemTransbordo.add(lbOrigem, j, i);
                 gpOrigemTransbordo.add(tfOrigem, j + 1, i);
@@ -223,6 +368,7 @@ public class FXMLController implements Initializable {
                 pulaLinha++;
                 Label lbDestino = new Label("Custo p/ Destino " + k + ":");
                 TextField tfDestino = new TextField();
+                tfDestino.setTextFormatter(FXUtil.textFormatterDouble());
                 //COLUNA LINHA
                 gpDestinoTransbordo.add(lbDestino, j, i);
                 gpDestinoTransbordo.add(tfDestino, j + 1, i);
@@ -243,6 +389,7 @@ public class FXMLController implements Initializable {
                 pulaLinha++;
                 Label lbTransbordo = new Label("Custo p/ Transbordo " + k + ":");
                 TextField tfTransbordo = new TextField();
+                tfTransbordo.setTextFormatter(FXUtil.textFormatterDouble());
                 //COLUNA LINHA
                 gpTransbordoTransbordo.add(lbTransbordo, j, i);
                 gpTransbordoTransbordo.add(tfTransbordo, j + 1, i);
@@ -251,8 +398,10 @@ public class FXMLController implements Initializable {
             Label lb = new Label("Transbordo " + t);
             TextField tf = new TextField();
             HBox hb = new HBox(lb, tf);
+            Pane p = new Pane(hb);
+            FXUtil.ajustaPaneTransbordo(p);
             VBox vb = new VBox();
-            vb.getChildren().addAll(hb, gpOrigemTransbordo, gpDestinoTransbordo, gpTransbordoTransbordo);
+            vb.getChildren().addAll(p, gpOrigemTransbordo, gpDestinoTransbordo, gpTransbordoTransbordo);
             vbTransbordo.getChildren().add(vb);
         }
 // -----------------------------------------------------------------------------        
@@ -280,10 +429,10 @@ public class FXMLController implements Initializable {
                 i++;
             }
             pulaLinha++;
-            Label lbOrigem = (Label) getNodePorIndiceLinhaColuna(i, j, gpOrigem);
-            Label lbOferta = (Label) getNodePorIndiceLinhaColuna(i, j + 2, gpOrigem);
-            TextField tfOrigem = (TextField) getNodePorIndiceLinhaColuna(i, j + 1, gpOrigem);
-            TextField tfOferta = (TextField) getNodePorIndiceLinhaColuna(i, j + 3, gpOrigem);
+            Label lbOrigem = (Label) FXUtil.getNodePorIndiceLinhaColuna(i, j, gpOrigem);
+            Label lbOferta = (Label) FXUtil.getNodePorIndiceLinhaColuna(i, j + 2, gpOrigem);
+            TextField tfOrigem = (TextField) FXUtil.getNodePorIndiceLinhaColuna(i, j + 1, gpOrigem);
+            TextField tfOferta = (TextField) FXUtil.getNodePorIndiceLinhaColuna(i, j + 3, gpOrigem);
 
             System.out.println(lbOrigem.getText());
             System.out.println(lbOferta.getText());
@@ -307,10 +456,10 @@ public class FXMLController implements Initializable {
                 i++;
             }
             pulaLinha++;
-            Label lbDestinoAux = (Label) getNodePorIndiceLinhaColuna(i, j, gpDestino);
-            Label lbDemandaAux = (Label) getNodePorIndiceLinhaColuna(i, j + 2, gpDestino);
-            TextField tfDestinoAux = (TextField) getNodePorIndiceLinhaColuna(i, j + 1, gpDestino);
-            TextField tfDemandaAux = (TextField) getNodePorIndiceLinhaColuna(i, j + 3, gpDestino);
+            Label lbDestinoAux = (Label) FXUtil.getNodePorIndiceLinhaColuna(i, j, gpDestino);
+            Label lbDemandaAux = (Label) FXUtil.getNodePorIndiceLinhaColuna(i, j + 2, gpDestino);
+            TextField tfDestinoAux = (TextField) FXUtil.getNodePorIndiceLinhaColuna(i, j + 1, gpDestino);
+            TextField tfDemandaAux = (TextField) FXUtil.getNodePorIndiceLinhaColuna(i, j + 3, gpDestino);
 
             System.out.println(lbDestinoAux.getText());
             System.out.println(lbDemandaAux.getText());
@@ -331,7 +480,8 @@ public class FXMLController implements Initializable {
             custo = 0;
 
             VBox vb = (VBox) vbTransbordo.getChildren().get(t);
-            HBox hb = (HBox) vb.getChildren().get(0);
+            Pane p = (Pane) vb.getChildren().get(0);
+            HBox hb = (HBox) p.getChildren().get(0);
             TextField tfNomeTransbordo = (TextField) hb.getChildren().get(1);
             GridPane gpOrigemTransbordo = (GridPane) vb.getChildren().get(1);
             GridPane gpDestinoTransbordo = (GridPane) vb.getChildren().get(2);
@@ -353,8 +503,8 @@ public class FXMLController implements Initializable {
                     i++;
                 }
                 pulaLinha++;
-                Label lbOrigem = (Label) getNodePorIndiceLinhaColuna(i, j, gpOrigemTransbordo);
-                TextField tfOrigem = (TextField) getNodePorIndiceLinhaColuna(i, j + 1, gpOrigemTransbordo);
+                Label lbOrigem = (Label) FXUtil.getNodePorIndiceLinhaColuna(i, j, gpOrigemTransbordo);
+                TextField tfOrigem = (TextField) FXUtil.getNodePorIndiceLinhaColuna(i, j + 1, gpOrigemTransbordo);
                 j = j + 2;
 
                 System.out.println(lbOrigem.getText());
@@ -374,8 +524,8 @@ public class FXMLController implements Initializable {
                     i++;
                 }
                 pulaLinha++;
-                Label lbDestino = (Label) getNodePorIndiceLinhaColuna(i, j, gpDestinoTransbordo);
-                TextField tfDestino = (TextField) getNodePorIndiceLinhaColuna(i, j + 1, gpDestinoTransbordo);
+                Label lbDestino = (Label) FXUtil.getNodePorIndiceLinhaColuna(i, j, gpDestinoTransbordo);
+                TextField tfDestino = (TextField) FXUtil.getNodePorIndiceLinhaColuna(i, j + 1, gpDestinoTransbordo);
                 j = j + 2;
 
                 System.out.println(lbDestino.getText());
@@ -395,8 +545,8 @@ public class FXMLController implements Initializable {
                     i++;
                 }
                 pulaLinha++;
-                Label lbTransbordo = (Label) getNodePorIndiceLinhaColuna(i, j, gpTransbordoTransbordo);
-                TextField tfTransbordo = (TextField) getNodePorIndiceLinhaColuna(i, j + 1, gpTransbordoTransbordo);
+                Label lbTransbordo = (Label) FXUtil.getNodePorIndiceLinhaColuna(i, j, gpTransbordoTransbordo);
+                TextField tfTransbordo = (TextField) FXUtil.getNodePorIndiceLinhaColuna(i, j + 1, gpTransbordoTransbordo);
                 j = j + 2;
 
                 System.out.println(lbTransbordo.getText());
@@ -412,115 +562,51 @@ public class FXMLController implements Initializable {
 // -----------------------------------------------------------------------------        
     }
 
-    @Override
-    public void initialize(URL url, ResourceBundle rb) {
-        initComponents();
+    private void montaExemplo1() {
+        qtdOrigem = 3;
+        qtdDestino = 2;
+        qtdTransbordo = 2;
 
-        btnGerar.addEventHandler(ActionEvent.ACTION, (ActionEvent actionEvent) -> {
-            qtdOrigem = Integer.valueOf(tfQtdOrigem.getText());
-            qtdDestino = Integer.valueOf(tfQtdDestino.getText());
-            qtdTransbordo = Integer.valueOf(tfQtdTransbordo.getText());
-            montaEntrada();
-        });
-        btnExemplo1.addEventHandler(ActionEvent.ACTION, (ActionEvent actionEvent) -> {
-            buscaInformacoesEntrada();
-            mostraEntrada();
-        });
-        btnExemplo2.addEventHandler(ActionEvent.ACTION, (ActionEvent actionEvent) -> {
-            Transporte transporte = new Transporte(origem, destino, transbordo);
-            transporte.montraQuadroCustos();
-        });
-    }
+        Origem o1 = new Origem("Brasil", 300);
+        Origem o2 = new Origem("Japao", 220);
+        Origem o3 = new Origem("Brasil", 400);
+//        Origem o1 = new Origem("Brasil", 400);
 
-    private void mostraEntrada() {
-        System.out.println("------- ORIGEM ");
-        for (int i = 0; i < origem.size(); i++) {
-            System.out.println("--> Origem " + i);
-            System.out.println(" nome: " + origem.get(i).getNome());
-            System.out.println(" oferta: " + origem.get(i).getOferta());
-        }
-        System.out.println("------- DESTINO ");
-        for (int i = 0; i < destino.size(); i++) {
-            System.out.println("--> Destino " + i);
-            System.out.println(" nome: " + destino.get(i).getNome());
-            System.out.println(" demanda: " + destino.get(i).getDemanda());
-        }
+        Destino d1 = new Destino("Norte", 400);
+        Destino d2 = new Destino("Sul", 520);
+//        Destino d1 = new Destino("Norte", 500);
 
-        System.out.println("------- TRANSBORDO ");
-        for (int i = 0; i < transbordo.size(); i++) {
-            System.out.println("--> Transbordo " + i);
-            System.out.println(" nome: " + transbordo.get(i).getNome());
-            double[] custos = transbordo.get(i).getCustos();
-            for (int j = 0; j < custos.length; j++) {
-                System.out.print("  " + custos[j]);
-            }
-            System.out.println(" ");
+        double[] v = new double[7];
+        v[0] = 40;
+        v[1] = 55;
+        v[2] = -1;
+        v[3] = 0;
+        v[4] = 25;
+        v[5] = 30;
+        v[6] = 40;
 
-        }
+        Transbordo t1 = new Transbordo("Cuba", v);
 
-    }
+        double[] v2 = new double[7];
+        v2[0] = 45;
+        v2[1] = 30;
+        v2[2] = 35;
+        v2[3] = 25;
+        v2[4] = 0;
+        v2[5] = 40;
+        v2[6] = 35;
 
-    private ColumnConstraints criaColumnConstraintsPercentual(double percentual) {
-        ColumnConstraints c = new ColumnConstraints(percentual);
-        c.setPercentWidth(percentual);
-        return c;
-    }
+        Transbordo t2 = new Transbordo("Belgica", v2);
 
-    private Node getNodePorIndiceLinhaColuna(final int row, final int column, GridPane gridPane) {
-        Node result = null;
-        ObservableList<Node> childrens = gridPane.getChildren();
-        for (Node node : childrens) {
-            if (gridPane.getRowIndex(node) == row && gridPane.getColumnIndex(node) == column) {
-                result = node;
-                break;
-            }
-        }
-        return result;
-    }
-
-    private void ajustaPaneTitulo(final Pane pane) {
-        pane.setMaxWidth(ControleTamanhos.LARGURA);
-        pane.setMinWidth(ControleTamanhos.LARGURA);
-        pane.setStyle("-fx-background-color: lightgray;");
-    }
-
-    private void ajustaGridPaneCabecalho(final GridPane gridPane) {
-        gridPane.getColumnConstraints().addAll(
-                criaColumnConstraintsPercentual(15),
-                criaColumnConstraintsPercentual(8),
-                criaColumnConstraintsPercentual(15),
-                criaColumnConstraintsPercentual(8),
-                criaColumnConstraintsPercentual(15),
-                criaColumnConstraintsPercentual(8),
-                criaColumnConstraintsPercentual(31)
-        );
-        gridPane.setVgap(ControleTamanhos.ESPACAMENTO);
-        gridPane.setHgap(ControleTamanhos.ESPACAMENTO);
-    }
-
-    private void ajustaGridPaneEntrada(final GridPane gridPane) {
-        gridPane.getColumnConstraints().addAll(
-                criaColumnConstraintsPercentual(12.5),
-                criaColumnConstraintsPercentual(12.5),
-                criaColumnConstraintsPercentual(12.5),
-                criaColumnConstraintsPercentual(12.5),
-                criaColumnConstraintsPercentual(12.5),
-                criaColumnConstraintsPercentual(12.5),
-                criaColumnConstraintsPercentual(12.5),
-                criaColumnConstraintsPercentual(12.5)
-        );
-        gridPane.setVgap(ControleTamanhos.ESPACAMENTO);
-        gridPane.setHgap(ControleTamanhos.ESPACAMENTO);
-    }
-
-    private void ajustaGridPaneTransbordo(final GridPane gridPane) {
-        gridPane.getColumnConstraints().addAll(
-                criaColumnConstraintsPercentual(25),
-                criaColumnConstraintsPercentual(25),
-                criaColumnConstraintsPercentual(25),
-                criaColumnConstraintsPercentual(25)
-        );
-        gridPane.setVgap(ControleTamanhos.ESPACAMENTO);
-        gridPane.setHgap(ControleTamanhos.ESPACAMENTO);
+        origem = new ArrayList<>();
+        destino = new ArrayList<>();
+        transbordo = new ArrayList<>();
+        origem.add(o1);
+        origem.add(o2);
+        origem.add(o3);
+        destino.add(d1);
+        destino.add(d2);
+        transbordo.add(t1);
+        transbordo.add(t2);
     }
 }

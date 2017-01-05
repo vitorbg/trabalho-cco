@@ -29,7 +29,7 @@ public class Transporte {
     private int quantidadeDestino;
     private boolean existeOrigemArtificial;
     private boolean existeDestinoArtificial;
-    private double bigM = 999999;
+    private final double bigM = 999999;
     private double ofertaTotal = 0;
     private double demandaTotal = 0;
     private double matrizCusto[][];
@@ -50,6 +50,36 @@ public class Transporte {
         this.transbordo = transbordo;
     }
 
+    public void calculaSolucaoBasicaFinal() {
+        int contadorPassos = 0;
+        System.out.println("---------------------------------------------------");
+        System.out.println("Verificação do Balanceamento do Sistema");
+        balanceaSistema();
+        System.out.println("---------------------------------------------------");
+        System.out.println("Montagem do Quadro de Custos e dos vetores Oferta e Demanda");
+        montaQuadroCustos();
+        System.out.println("---------------------------------------------------");
+//        montaExemplo1();
+        System.out.println("Cálculo da SBF Inicial pelo método do Canto Noroeste");
+        calculaSBFInicialCantoNoroeste();
+        System.out.println("---------------------------------------------------");
+        System.out.println("Calcula a otimalidade da SBF");
+        calculaOtimalidade();
+        boolean otimalidade = false;
+        while (otimalidade == false) {
+            System.out.println("************************ ");
+            System.out.println("Passo " + contadorPassos);
+            otimalidade = calculaOtimalidade();
+            contadorPassos++;
+        }
+        System.out.println("\n************************ ");
+        System.out.println("---------------------------------------------------");
+        System.out.println("Resultados:");
+        mostraMatrizSolucao();
+        calculaSolucao();
+        System.out.println("---------------------------------------------------");
+    }
+
     private void balanceaSistema() {
 //Verifica as demandas e capacidades totais para balancear o sistema -----------
         ofertaTotal = 0;
@@ -68,8 +98,8 @@ public class Transporte {
             demandaTotal = demandaTotal + destino.get(c).getDemanda();
         }
 
-        System.out.println("DEMANDA TOTAL INICIAL: " + ofertaTotal);
-        System.out.println("CAPACIDADE TOTAL INICIAL: " + demandaTotal);
+        System.out.println("Oferta Total Inicial: " + ofertaTotal);
+        System.out.println("Demanda Total Inicial: " + demandaTotal);
 
         ajuste = 0;
         if (ofertaTotal != demandaTotal) {
@@ -131,13 +161,12 @@ public class Transporte {
         for (c = 0; c < destino.size(); c++) {
             demandaTotal = demandaTotal + destino.get(c).getDemanda();
         }
+        System.out.println("Oferta Total Pos Balanceamento: " + ofertaTotal);
+        System.out.println("Demanda Total Pos Balanceamento: " + demandaTotal);
     }
 
-    public void montraQuadroCustos() {
-
-        balanceaSistema();
+    private void montaQuadroCustos() {
 //Inicializa as variaveis de controle da matriz --------------------------------        
-
         linhas = origem.size() + transbordo.size();
         colunas = transbordo.size() + destino.size();
         quantidadeTransbordo = transbordo.size();
@@ -156,14 +185,6 @@ public class Transporte {
         vetorUVisitado = new boolean[linhas];
         vetorVVisitado = new boolean[colunas];
 
-        System.out.println("LINHAS: " + linhas);
-        System.out.println("COLUNAS: " + colunas);
-        System.out.println("QUANTIDADE ORIGEM: " + quantidadeOrigem);
-        System.out.println("QUANTIDADE TRANSBORDO: " + quantidadeTransbordo);
-        System.out.println("QUANTIDADE DESTINO: " + quantidadeDestino);
-        System.out.println("Oferta TOTAL: " + ofertaTotal);
-        System.out.println("Demanda TOTAL: " + demandaTotal);
-
         int tranbordoAtual;
         int destinoAtual;
         int posicaoAtual;
@@ -173,13 +194,14 @@ public class Transporte {
 //Monta custos das colunas de Transbordo ---------------------------------------
         tranbordoAtual = 0;
         for (coluna = 0; coluna < quantidadeTransbordo; coluna++) {
-
             double v[] = transbordo.get(tranbordoAtual).getCustos();
-
             for (linha = 0; linha < (linhas); linha++) {
+//                if (v[linha] == -1) {
+//                    matrizCusto[linha][coluna] = bigM;
+//                } else {
                 matrizCusto[linha][coluna] = v[linha];
+//                }
             }
-
             vetorDemanda[coluna] = ofertaTotal;
             tranbordoAtual++;
         }
@@ -209,6 +231,11 @@ public class Transporte {
 
                     if (pos != qtdElementos) {
                         matrizCusto[linha][coluna] = v[pos];
+//                        if (v[pos] == -1) {
+//                            matrizCusto[linha][coluna] = bigM;
+//                        } else {
+                        matrizCusto[linha][coluna] = v[pos];
+//                        }
                         indicador++;
                     }
                 }
@@ -229,21 +256,9 @@ public class Transporte {
             }
             origemAtual++;
         }
-//        montaExemplo1();
-        calculaSBFInicialCantroNoroeste();
-
-        calculaOtimalidade();
-        boolean otimalidade = false;
-        while (otimalidade == false) {
-            otimalidade = calculaOtimalidade();
-        }
-        mostraMatrizSolucao();
-        mostraVetoresUJ();
-        calculaSolucao();
-
     }
 
-    private void calculaSBFInicialCantroNoroeste() {
+    private void calculaSBFInicialCantoNoroeste() {
         int i;
         int j;
         for (i = 0; i < linhas; i++) {
@@ -258,87 +273,47 @@ public class Transporte {
         int k;
         for (i = 0; i < linhas; i++) {
             for (j = 0; j < colunas; j++) {
-//                System.out.println("\n--------------------------------------------------");
-//                mostraMatrizSolucao();
-//                mostraVetorOferta();
-//                mostraVetorDemanda();
-//                System.out.println("\n--------------------------------------------------");
                 if (matrizSolucao[i][j] != -1) {
-
                     if (vetorDemanda[j] < vetorOferta[i]) {
-
                         matrizSolucao[i][j] = vetorDemanda[j];
-
                         vetorOferta[i] = vetorOferta[i] - vetorDemanda[j];
-
                         vetorDemanda[j] = 0;
-
                         for (k = i + 1; k < linhas; k++) {
                             matrizSolucao[k][j] = -1;
                         }
-
                     } else {
                         matrizSolucao[i][j] = vetorOferta[i];
-
                         vetorDemanda[j] = vetorDemanda[j] - vetorOferta[i];
-
                         vetorOferta[i] = 0;
-
                         for (k = j + 1; k < colunas; k++) {
                             matrizSolucao[i][k] = -1;
                         }
                     }
                 }
-//                System.out.println("\n--------------------------------------------------");
-//                mostraMatrizSolucao();
-//                mostraVetorOferta();
-//                mostraVetorDemanda();
-//                System.out.println("\n--------------------------------------------------");
             }
 
         }
-        System.out.println("\n--------------------------------------------------");
+        System.out.println("\n ************");
+        System.out.println("\n SBF Inicial pelo metodo do Canto Noroeste");
         mostraMatrizSolucao();
         mostraVetorOferta();
         mostraVetorDemanda();
-        System.out.println("\n--------------------------------------------------");
+        System.out.println("\n ************");
 
-    }
-
-    private void calculaSolucao() {
-        int i;
-        int j;
-
-        System.out.println("  ");
-//        System.out.println("Matriz de Solução");
-
-        double resultado = 0;
-        for (i = 0; i < linhas; i++) {
-            for (j = 0; j < colunas; j++) {
-
-                if (matrizSolucao[i][j] != -1) {
-                    resultado = resultado + (matrizSolucao[i][j] * matrizCusto[i][j]);
-                }
-            }
-            System.out.println("\n Res===== " + resultado);
-        }
     }
 
     public boolean calculaOtimalidade() {
 
         recarregaEstruturasAuxiliaresOtimalidade();
         calculaVetoresUV();
+        mostraVetoresUJ();
         boolean encontraMenorElemento = encontraMenorElemento();
         if (encontraMenorElemento == false) {
+            System.out.println("\nNão há mais nenhuma variavel não básica negativa.");
             return true;
         }
-
-        System.out.println("TEM VARIAVEL NAO BASICA NEGATIVA: " + encontraMenorElemento);
-
         encontraCiclo();
-
         PassoCaminho indiceVariavelNegativa = caminho.get(1);
-
         for (int i = 1; i < caminho.size(); i++) {
             if (i % 2 != 0) {
                 PassoCaminho aux = caminho.get(i);
@@ -347,8 +322,7 @@ public class Transporte {
                 }
             }
         }
-
-        System.out.println("VARIAVEL A SAIR: " + indiceVariavelNegativa.getI() + "    " + indiceVariavelNegativa.getJ() + "        " + indiceVariavelNegativa.getValor());
+        System.out.println("Variavel a deixar a SBF: " + indiceVariavelNegativa.getI() + "    " + indiceVariavelNegativa.getJ() + "        " + indiceVariavelNegativa.getValor());
 
         matrizSolucao[novaVariavelBasica.getI()][novaVariavelBasica.getJ()] = indiceVariavelNegativa.getValor();
 
@@ -356,15 +330,13 @@ public class Transporte {
         int qtdElementosCaminho = caminho.size();
 
         for (int i = 1; i < qtdElementosCaminho; i++) {
-
             PassoCaminho aux = caminho.get((caminho.size() - 1));
             if (subtrai) {
-                System.out.println("SUB          " + aux.getI() + "       " + aux.getJ() + "     " + matrizSolucao[aux.getI()][aux.getJ()]);
+//                System.out.println("SUB          " + aux.getI() + "       " + aux.getJ() + "     " + matrizSolucao[aux.getI()][aux.getJ()]);
                 matrizSolucao[aux.getI()][aux.getJ()] = matrizSolucao[aux.getI()][aux.getJ()] - indiceVariavelNegativa.getValor();
-
                 subtrai = false;
             } else {
-                System.out.println(" SOM         " + aux.getI() + "       " + aux.getJ() + "     " + matrizSolucao[aux.getI()][aux.getJ()]);
+//                System.out.println(" SOM         " + aux.getI() + "       " + aux.getJ() + "     " + matrizSolucao[aux.getI()][aux.getJ()]);
                 matrizSolucao[aux.getI()][aux.getJ()] = matrizSolucao[aux.getI()][aux.getJ()] + indiceVariavelNegativa.getValor();
                 subtrai = true;
             }
@@ -387,8 +359,6 @@ public class Transporte {
             for (j = 0; j < colunas; j++) {
                 if (matrizSolucao[i][j] == -1) {
                     double resultadoAuxiliar = matrizCusto[i][j] - (vetorU[i] + vetorV[j]);
-                    System.out.println(" " + i + " " + j + " = " + resultadoAuxiliar);
-
                     if (resultadoAuxiliar < resultado) {
                         resultado = resultadoAuxiliar;
                         iMenorElemento = i;
@@ -406,46 +376,15 @@ public class Transporte {
         } else {
             return true;
         }
-
     }
 
     private void encontraCiclo() {
-        int i;
-        int j;
-//        int iMenorElemento = 0;
-//        int jMenorElemento = 0;
-//
-//        double resultado = 0;
-//
-//        for (i = 0; i < linhas; i++) {
-//            for (j = 0; j < colunas; j++) {
-//                if (matrizSolucao[i][j] == -1) {
-//                    double resultadoAuxiliar = matrizCusto[i][j] - (vetorU[i] + vetorV[j]);
-//                    System.out.println(" " + i + " " + j + " = " + resultadoAuxiliar);
-//
-//                    if (resultadoAuxiliar < resultado) {
-//                        resultado = resultadoAuxiliar;
-//                        iMenorElemento = i;
-//                        jMenorElemento = j;
-//
-//                    }
-//                }
-//            }
-//        }
-//        System.out.println("RESS: i= " + iMenorElemento + "  j= " + jMenorElemento + "    VALOR: " + resultado);
-
         caminho = new ArrayList<>();
-
         PassoCaminho passoInicial = novaVariavelBasica;
-
         caminho.add(passoInicial);
-
         matrizSolucao[novaVariavelBasica.getI()][novaVariavelBasica.getJ()] = novaVariavelBasica.getValor();
-
         boolean aindaTemCaminho = true;
-        int linha;
-        int coluna;
-        int c = 0;
+
         int proximaLinha = passoInicial.getI();//INICIAL
         matrizVisitado[passoInicial.getI()][passoInicial.getJ()] = true;
 
@@ -454,11 +393,9 @@ public class Transporte {
 
         while (aindaTemCaminho) {
             procuraLinha = verificaElementoLinha(proximaLinha);
-
             if (procuraLinha != null) {
                 matrizVisitado[procuraLinha.getI()][procuraLinha.getJ()] = true;
                 caminho.add(procuraLinha);
-
                 if (procuraLinha.getI() == passoInicial.getI() && procuraLinha.getJ() == passoInicial.getJ()) {
                     aindaTemCaminho = false;
                 } else {
@@ -466,46 +403,28 @@ public class Transporte {
                     if (procuraColuna != null) {
                         matrizVisitado[procuraColuna.getI()][procuraColuna.getJ()] = true;
                         caminho.add(procuraColuna);
-
                         if (procuraColuna.getI() == passoInicial.getI() && procuraColuna.getJ() == passoInicial.getJ()) {
                             aindaTemCaminho = false;
-                        } else {
-//                            caminho.add(procuraLinha);
-//                            caminho.add(procuraColuna);
                         }
                         proximaLinha = procuraColuna.getI();
                     } else {
                         aindaTemCaminho = false;
                     }
-                    mostraMatrizVisitado();
                 }
             } else {
                 aindaTemCaminho = false;
             }
-            mostraMatrizVisitado();
-
-            mostraCaminho(caminho);
-
         }
-    }
-
-    private void mostraCaminho(ArrayList<PassoCaminho> caminho) {
-        System.out.println("CAMINHO");
-        for (int i = 0; i < caminho.size(); i++) {
-            System.out.println("Valor: " + caminho.get(i).getValor() + " i= " + caminho.get(i).getI() + " j= " + caminho.get(i).getJ());
-        }
+        mostraCaminho(caminho);
     }
 
     private PassoCaminho verificaElementoLinha(int linha) {
         PassoCaminho p = null;
         ArrayList<PassoCaminho> caminhosLinha = new ArrayList<>();
-        System.out.println("VERIFICA ELEMENTO LINHA LINHA LINHA = " + linha);
 
         for (int j = 0; j < colunas; j++) {
             if (matrizSolucao[linha][j] != -1 && matrizVisitado[linha][j] == false) {
                 p = new PassoCaminho(linha, j, matrizSolucao[linha][j]);
-                System.out.println("VERIFICA ELEMENTO LINHA = " + p.getI() + "   " + p.getJ());
-
                 caminhosLinha.add(p);
             }
         }
@@ -525,8 +444,6 @@ public class Transporte {
             }
         }
 
-//        System.out.println("VERIFICA ELEMENTO LINHA = " + p.getI() + "   " + p.getJ()
-//        );
         return p;
     }
 
@@ -557,54 +474,55 @@ public class Transporte {
                 p = caminhosColuna.get(0);
             }
         }
-
         return p;
     }
 
     private void calculaVetoresUV() {
         int i;
         int j;
-
-        int posicaoU = 0;
-        int posicaoJ = 0;
-        int posicaoVetor = 0;
-
         vetorU[0] = 0;
         vetorUVisitado[0] = true;
         for (i = 0; i < linhas; i++) {
             for (j = 0; j < colunas; j++) {
                 if (matrizSolucao[i][j] == -1) {
                 } else {
-                    System.out.println(" MATRIZ SOLUCAO " + i + " " + j);
                     if (vetorVVisitado[j] == false) {
                         vetorV[j] = matrizCusto[i][j] - vetorU[i];
                         vetorVVisitado[j] = true;
-                        System.out.println(" VETOR V ");
-                        System.out.print("vetorV[" + j + "] = " + vetorV[j]);
-                        System.out.print("   -> matrizCusto[" + i + "][" + j + "] = " + matrizCusto[i][j]);
-                        System.out.print("   vetorU[" + i + "] = " + vetorU[i]);
-                        System.out.println("  ");
-
                     }
                     if (vetorUVisitado[i] == false) {
                         vetorUVisitado[i] = true;
-//                        vetorU[i] = matrizCusto[i][j] - vetorV[i];
                         vetorU[i] = matrizCusto[i][j] - vetorV[j];
-                        System.out.println(" VETOR U  ");
-                        System.out.print("vetorU[" + i + "] = " + vetorU[i]);
-                        System.out.print("   -> matrizCusto[" + i + "][" + j + "] = " + matrizCusto[i][j]);
-                        System.out.print("   vetorV[" + j + "] = " + vetorV[j]);
-                        System.out.println("  ");
                     }
-
-                    System.out.println("          ");
-
                 }
             }
         }
     }
 
-    public void mostraMatrizVisitado() {
+    private void calculaSolucao() {
+        int i;
+        int j;
+        double resultado = 0;
+        for (i = 0; i < linhas; i++) {
+            for (j = 0; j < colunas; j++) {
+                if (matrizSolucao[i][j] != -1) {
+                    resultado = resultado + (matrizSolucao[i][j] * matrizCusto[i][j]);
+                }
+            }
+        }
+        System.out.println("\n Z= " + resultado);
+    }
+
+    private void mostraCaminho(ArrayList<PassoCaminho> caminho) {
+        System.out.println("Caminho do Ciclo");
+        for (int i = 0; i < caminho.size(); i++) {
+            System.out.print("[" + caminho.get(i).getI() + "][" + caminho.get(i).getJ() + "] = " + caminho.get(i).getValor() + "  ->  ");
+        }
+        System.out.print("[" + caminho.get(0).getI() + "][" + caminho.get(0).getJ() + "] = " + caminho.get(0).getValor());
+        System.out.println("\n");
+    }
+
+    private void mostraMatrizVisitado() {
         int i;
         int j;
 
@@ -619,7 +537,7 @@ public class Transporte {
         }
     }
 
-    public void mostraMatrizCusto() {
+    private void mostraMatrizCusto() {
         int i;
         int j;
 
@@ -634,7 +552,7 @@ public class Transporte {
         }
     }
 
-    public void mostraMatrizSolucao() {
+    private void mostraMatrizSolucao() {
         int i;
         int j;
 
@@ -649,7 +567,7 @@ public class Transporte {
         }
     }
 
-    public void mostraVetorOferta() {
+    private void mostraVetorOferta() {
         int i;
 
         System.out.println("  ");
@@ -660,7 +578,7 @@ public class Transporte {
         }
     }
 
-    public void mostraVetorDemanda() {
+    private void mostraVetorDemanda() {
         int i;
 
         System.out.println("  ");
@@ -671,7 +589,7 @@ public class Transporte {
         }
     }
 
-    public void mostraVetoresUJ() {
+    private void mostraVetoresUJ() {
         int i;
 
         System.out.println("  ");
@@ -688,7 +606,7 @@ public class Transporte {
         }
     }
 
-    public void mostraEntrada() {
+    private void mostraEntrada() {
         int i;
         int j;
         for (i = 0; i < transbordo.size(); i++) {
