@@ -29,6 +29,7 @@ public class Transporte {
     private int quantidadeDestino;
     private boolean existeOrigemArtificial;
     private boolean existeDestinoArtificial;
+    private double bigM = 999999;
     private double ofertaTotal = 0;
     private double demandaTotal = 0;
     private double matrizCusto[][];
@@ -42,19 +43,11 @@ public class Transporte {
     private double vetorDemanda[];
     private ArrayList<PassoCaminho> caminho;
     private PassoCaminho novaVariavelBasica;
-    private boolean temTransbordo;
 
     public Transporte(List<Origem> origem, List<Destino> destino, List<Transbordo> transbordo) {
         this.origem = origem;
         this.destino = destino;
         this.transbordo = transbordo;
-        this.temTransbordo = true;
-    }
-
-    public Transporte(List<Origem> origem, List<Destino> destino) {
-        this.origem = origem;
-        this.destino = destino;
-        this.temTransbordo = false;
     }
 
     private void balanceaSistema() {
@@ -141,129 +134,105 @@ public class Transporte {
     }
 
     public void montraQuadroCustos() {
+
+        balanceaSistema();
 //Inicializa as variaveis de controle da matriz --------------------------------        
 
-        if (temTransbordo) {
-            linhas = origem.size() + transbordo.size();
-            colunas = transbordo.size() + destino.size();
-            quantidadeTransbordo = transbordo.size();
-            quantidadeOrigem = origem.size();
-            quantidadeDestino = destino.size();
+        linhas = origem.size() + transbordo.size();
+        colunas = transbordo.size() + destino.size();
+        quantidadeTransbordo = transbordo.size();
+        quantidadeOrigem = origem.size();
+        quantidadeDestino = destino.size();
 
-            matrizCusto = new double[linhas][colunas];
-            matrizSolucao = new double[linhas][colunas];
-            matrizVisitado = new boolean[linhas][colunas];
-            vetorU = new double[linhas];
-            vetorV = new double[colunas];
-            vetorOferta = new double[linhas];
-            vetorDemanda = new double[colunas];
+        matrizCusto = new double[linhas][colunas];
+        matrizSolucao = new double[linhas][colunas];
+        matrizVisitado = new boolean[linhas][colunas];
+        vetorU = new double[linhas];
+        vetorV = new double[colunas];
+        vetorOferta = new double[linhas];
+        vetorDemanda = new double[colunas];
+        vetorU = new double[linhas];
+        vetorV = new double[colunas];
+        vetorUVisitado = new boolean[linhas];
+        vetorVVisitado = new boolean[colunas];
 
-            System.out.println("LINHAS: " + linhas);
-            System.out.println("COLUNAS: " + colunas);
-            System.out.println("QUANTIDADE ORIGEM: " + quantidadeOrigem);
-            System.out.println("QUANTIDADE TRANSBORDO: " + quantidadeTransbordo);
-            System.out.println("QUANTIDADE DESTINO: " + quantidadeDestino);
-            System.out.println("Oferta TOTAL: " + ofertaTotal);
-            System.out.println("Demanda TOTAL: " + demandaTotal);
+        System.out.println("LINHAS: " + linhas);
+        System.out.println("COLUNAS: " + colunas);
+        System.out.println("QUANTIDADE ORIGEM: " + quantidadeOrigem);
+        System.out.println("QUANTIDADE TRANSBORDO: " + quantidadeTransbordo);
+        System.out.println("QUANTIDADE DESTINO: " + quantidadeDestino);
+        System.out.println("Oferta TOTAL: " + ofertaTotal);
+        System.out.println("Demanda TOTAL: " + demandaTotal);
 
-            int tranbordoAtual;
-            int destinoAtual;
-            int posicaoAtual;
-            int origemAtual;
-            int linha;
-            int coluna;
+        int tranbordoAtual;
+        int destinoAtual;
+        int posicaoAtual;
+        int origemAtual;
+        int linha;
+        int coluna;
 //Monta custos das colunas de Transbordo ---------------------------------------
-            tranbordoAtual = 0;
-            for (coluna = 0; coluna < quantidadeTransbordo; coluna++) {
+        tranbordoAtual = 0;
+        for (coluna = 0; coluna < quantidadeTransbordo; coluna++) {
 
-                double v[] = transbordo.get(tranbordoAtual).getCustos();
+            double v[] = transbordo.get(tranbordoAtual).getCustos();
 
-                for (linha = 0; linha < (linhas); linha++) {
-                    matrizCusto[linha][coluna] = v[linha];
-                }
-
-                vetorDemanda[coluna] = ofertaTotal;
-                tranbordoAtual++;
-            }
-
-//Monta custos das colunas de Demanda ------------------------------------------
-            tranbordoAtual = 0;
-            destinoAtual = 0;
-            int indicador = 0;
-
-            for (coluna = quantidadeTransbordo; coluna < (quantidadeDestino + quantidadeTransbordo); coluna++) {
-                double v[];
-                if (existeDestinoArtificial && tranbordoAtual == (quantidadeTransbordo)) {
-                    v = new double[tamanhoVetorTransbordo];
-                    for (int i = 0; i < tamanhoVetorTransbordo; i++) {
-                        v[i] = 0;
-                    }
-                } else {
-                    v = transbordo.get(tranbordoAtual).getCustos();
-                    indicador = 0;
-                }
-                for (linha = 0; linha < (linhas); linha++) {
-                    if (linha < quantidadeOrigem) {
-                        matrizCusto[linha][coluna] = 999.0;
-                    } else {
-                        int pos = (quantidadeOrigem + quantidadeTransbordo) + indicador;
-                        int qtdElementos = quantidadeDestino + quantidadeOrigem + quantidadeTransbordo;
-
-                        if (pos != qtdElementos) {
-                            matrizCusto[linha][coluna] = v[pos];
-                            indicador++;
-                        }
-                    }
-                }
-
-                vetorDemanda[coluna] = destino.get(destinoAtual).getDemanda();
-                destinoAtual++;
-                tranbordoAtual++;
-            }
-
-//Monta custos da ultima coluna de capacidade
-            origemAtual = 0;
             for (linha = 0; linha < (linhas); linha++) {
-                if (linha < quantidadeOrigem) {
-                    vetorOferta[linha] = origem.get(origemAtual).getOferta();
-                } else {
-                    vetorOferta[linha] = ofertaTotal;
-                }
-                origemAtual++;
-            }
-        } else {
-
-            linhas = origem.size();
-            colunas = destino.size();
-            quantidadeTransbordo = transbordo.size();
-            quantidadeOrigem = origem.size();
-            quantidadeDestino = destino.size();
-
-            matrizCusto = new double[linhas][colunas];
-            matrizSolucao = new double[linhas][colunas];
-            matrizVisitado = new boolean[linhas][colunas];
-            vetorU = new double[linhas];
-            vetorV = new double[colunas];
-            vetorOferta = new double[linhas];
-            vetorDemanda = new double[colunas];
-            for (int i = 0; i < linhas; i++) {
-                for (int j = 0; j < linhas; j++) {
-//                    matrizCusto[i][j]
-                }
+                matrizCusto[linha][coluna] = v[linha];
             }
 
+            vetorDemanda[coluna] = ofertaTotal;
+            tranbordoAtual++;
         }
 
-        mostraMatrizCusto();
-        mostraVetorDemanda();
-        mostraVetorOferta();
+//Monta custos das colunas de Demanda ------------------------------------------
+        tranbordoAtual = 0;
+        destinoAtual = 0;
+        int indicador = 0;
 
-        montaExemplo1();
-        mostraMatrizCusto();
-        mostraMatrizSolucao();
+        for (coluna = quantidadeTransbordo; coluna < (quantidadeDestino + quantidadeTransbordo); coluna++) {
+            double v[];
+            if (existeDestinoArtificial && tranbordoAtual == (quantidadeTransbordo)) {
+                v = new double[tamanhoVetorTransbordo];
+                for (int i = 0; i < tamanhoVetorTransbordo; i++) {
+                    v[i] = 0;
+                }
+            } else {
+                v = transbordo.get(tranbordoAtual).getCustos();
+                indicador = 0;
+            }
+            for (linha = 0; linha < (linhas); linha++) {
+                if (linha < quantidadeOrigem) {
+                    matrizCusto[linha][coluna] = bigM;
+                } else {
+                    int pos = (quantidadeOrigem + quantidadeTransbordo) + indicador;
+                    int qtdElementos = quantidadeDestino + quantidadeOrigem + quantidadeTransbordo;
+
+                    if (pos != qtdElementos) {
+                        matrizCusto[linha][coluna] = v[pos];
+                        indicador++;
+                    }
+                }
+            }
+
+            vetorDemanda[coluna] = destino.get(destinoAtual).getDemanda();
+            destinoAtual++;
+            tranbordoAtual++;
+        }
+
+//Monta custos da ultima coluna de capacidade
+        origemAtual = 0;
+        for (linha = 0; linha < (linhas); linha++) {
+            if (linha < quantidadeOrigem) {
+                vetorOferta[linha] = origem.get(origemAtual).getOferta();
+            } else {
+                vetorOferta[linha] = ofertaTotal;
+            }
+            origemAtual++;
+        }
+//        montaExemplo1();
+        calculaSBFInicialCantroNoroeste();
+
         calculaOtimalidade();
-        mostraMatrizSolucao();
-        mostraVetoresUJ();
         boolean otimalidade = false;
         while (otimalidade == false) {
             otimalidade = calculaOtimalidade();
@@ -271,6 +240,68 @@ public class Transporte {
         mostraMatrizSolucao();
         mostraVetoresUJ();
         calculaSolucao();
+
+    }
+
+    private void calculaSBFInicialCantroNoroeste() {
+        int i;
+        int j;
+        for (i = 0; i < linhas; i++) {
+            for (j = 0; j < colunas; j++) {
+                matrizSolucao[i][j] = 0;
+            }
+        }
+        mostraMatrizSolucao();
+        mostraMatrizCusto();
+        mostraVetorOferta();
+        mostraVetorDemanda();
+        int k;
+        for (i = 0; i < linhas; i++) {
+            for (j = 0; j < colunas; j++) {
+//                System.out.println("\n--------------------------------------------------");
+//                mostraMatrizSolucao();
+//                mostraVetorOferta();
+//                mostraVetorDemanda();
+//                System.out.println("\n--------------------------------------------------");
+                if (matrizSolucao[i][j] != -1) {
+
+                    if (vetorDemanda[j] < vetorOferta[i]) {
+
+                        matrizSolucao[i][j] = vetorDemanda[j];
+
+                        vetorOferta[i] = vetorOferta[i] - vetorDemanda[j];
+
+                        vetorDemanda[j] = 0;
+
+                        for (k = i + 1; k < linhas; k++) {
+                            matrizSolucao[k][j] = -1;
+                        }
+
+                    } else {
+                        matrizSolucao[i][j] = vetorOferta[i];
+
+                        vetorDemanda[j] = vetorDemanda[j] - vetorOferta[i];
+
+                        vetorOferta[i] = 0;
+
+                        for (k = j + 1; k < colunas; k++) {
+                            matrizSolucao[i][k] = -1;
+                        }
+                    }
+                }
+//                System.out.println("\n--------------------------------------------------");
+//                mostraMatrizSolucao();
+//                mostraVetorOferta();
+//                mostraVetorDemanda();
+//                System.out.println("\n--------------------------------------------------");
+            }
+
+        }
+        System.out.println("\n--------------------------------------------------");
+        mostraMatrizSolucao();
+        mostraVetorOferta();
+        mostraVetorDemanda();
+        System.out.println("\n--------------------------------------------------");
 
     }
 
@@ -544,9 +575,7 @@ public class Transporte {
             for (j = 0; j < colunas; j++) {
                 if (matrizSolucao[i][j] == -1) {
                 } else {
-
                     System.out.println(" MATRIZ SOLUCAO " + i + " " + j);
-
                     if (vetorVVisitado[j] == false) {
                         vetorV[j] = matrizCusto[i][j] - vetorU[i];
                         vetorVVisitado[j] = true;
@@ -559,11 +588,12 @@ public class Transporte {
                     }
                     if (vetorUVisitado[i] == false) {
                         vetorUVisitado[i] = true;
-                        vetorU[i] = matrizCusto[i][j] - vetorV[i];
+//                        vetorU[i] = matrizCusto[i][j] - vetorV[i];
+                        vetorU[i] = matrizCusto[i][j] - vetorV[j];
                         System.out.println(" VETOR U  ");
                         System.out.print("vetorU[" + i + "] = " + vetorU[i]);
                         System.out.print("   -> matrizCusto[" + i + "][" + j + "] = " + matrizCusto[i][j]);
-                        System.out.print("   vetorV[" + i + "] = " + vetorV[i]);
+                        System.out.print("   vetorV[" + j + "] = " + vetorV[j]);
                         System.out.println("  ");
                     }
 
@@ -691,10 +721,26 @@ public class Transporte {
     public void montaExemplo1() {
         linhas = 3;
         colunas = 4;
+
+        matrizCusto = new double[linhas][colunas];
+        matrizSolucao = new double[linhas][colunas];
+        matrizVisitado = new boolean[linhas][colunas];
+        vetorU = new double[linhas];
+        vetorV = new double[colunas];
+        vetorOferta = new double[linhas];
+        vetorDemanda = new double[colunas];
         vetorU = new double[linhas];
         vetorV = new double[colunas];
         vetorUVisitado = new boolean[linhas];
         vetorVVisitado = new boolean[colunas];
+
+        vetorOferta[0] = 6;
+        vetorOferta[1] = 8;
+        vetorOferta[2] = 10;
+        vetorDemanda[0] = 4;
+        vetorDemanda[1] = 7;
+        vetorDemanda[2] = 6;
+        vetorDemanda[3] = 7;
         //
         matrizSolucao[0][0] = 4;
         matrizSolucao[0][1] = 2;
@@ -726,5 +772,4 @@ public class Transporte {
         matrizCusto[2][2] = 2;
         matrizCusto[2][3] = 1;
     }
-
 }

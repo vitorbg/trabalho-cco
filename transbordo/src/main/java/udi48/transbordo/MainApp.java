@@ -50,7 +50,7 @@ public class MainApp extends Application {
         double[] v = new double[7];
         v[0] = 40;
         v[1] = 55;
-        v[2] = 9999;
+        v[2] = 999999;
         v[3] = 0;
         v[4] = 25;
         v[5] = 30;
