@@ -1,17 +1,11 @@
 package udi48.transbordo;
 
-import java.util.ArrayList;
-import java.util.List;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import udi48.transbordo.dominio.Destino;
-import udi48.transbordo.dominio.Origem;
-import udi48.transbordo.dominio.Transbordo;
-import udi48.transbordo.transporte.Transporte;
 
 public class MainApp extends Application {
 
@@ -22,7 +16,7 @@ public class MainApp extends Application {
         Scene scene = new Scene(root);
         scene.getStylesheets().add("/styles/Styles.css");
 
-        stage.setTitle("JavaFX and Maven");
+        stage.setTitle("Problema do Transporte com Transbordo");
         stage.setScene(scene);
         stage.show();
     }

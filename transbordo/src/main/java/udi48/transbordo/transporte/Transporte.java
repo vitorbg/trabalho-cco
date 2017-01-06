@@ -41,6 +41,7 @@ public class Transporte {
     private boolean matrizVisitado[][];
     private double vetorOferta[];
     private double vetorDemanda[];
+    private double resultadoZ;
     private ArrayList<PassoCaminho> caminho;
     private PassoCaminho novaVariavelBasica;
 
@@ -59,6 +60,7 @@ public class Transporte {
         System.out.println("Montagem do Quadro de Custos e dos vetores Oferta e Demanda");
         montaQuadroCustos();
         System.out.println("---------------------------------------------------");
+//Sem transbordo
 //        montaExemplo1();
         System.out.println("Cálculo da SBF Inicial pelo método do Canto Noroeste");
         calculaSBFInicialCantoNoroeste();
@@ -289,6 +291,9 @@ public class Transporte {
                             matrizSolucao[i][k] = -1;
                         }
                     }
+//                    if (matrizSolucao[i][j] == 0) {
+//                        matrizSolucao[i][j] = -1;
+//                    }
                 }
             }
 
@@ -325,6 +330,7 @@ public class Transporte {
         System.out.println("Variavel a deixar a SBF: " + indiceVariavelNegativa.getI() + "    " + indiceVariavelNegativa.getJ() + "        " + indiceVariavelNegativa.getValor());
 
         matrizSolucao[novaVariavelBasica.getI()][novaVariavelBasica.getJ()] = indiceVariavelNegativa.getValor();
+//        matrizSolucao[indiceVariavelNegativa.getI()][indiceVariavelNegativa.getJ()] = -1;
 
         boolean subtrai = true;
         int qtdElementosCaminho = caminho.size();
@@ -342,6 +348,7 @@ public class Transporte {
             }
             caminho.remove((caminho.size() - 1));
         }
+//        matrizSolucao[indiceVariavelNegativa.getI()][indiceVariavelNegativa.getJ()] = -1;
 
         mostraMatrizSolucao();
         return false;
@@ -511,6 +518,7 @@ public class Transporte {
             }
         }
         System.out.println("\n Z= " + resultado);
+        this.resultadoZ = resultado;
     }
 
     private void mostraCaminho(ArrayList<PassoCaminho> caminho) {
@@ -690,4 +698,37 @@ public class Transporte {
         matrizCusto[2][2] = 2;
         matrizCusto[2][3] = 1;
     }
+
+    public double getBigM() {
+        return bigM;
+    }
+
+    public double[][] getMatrizSolucao() {
+        return matrizSolucao;
+    }
+
+    public double getResultadoZ() {
+        return resultadoZ;
+    }
+
+    public int getLinhas() {
+        return linhas;
+    }
+
+    public int getColunas() {
+        return colunas;
+    }
+
+    public List<Origem> getOrigem() {
+        return origem;
+    }
+
+    public List<Destino> getDestino() {
+        return destino;
+    }
+
+    public List<Transbordo> getTransbordo() {
+        return transbordo;
+    }
+
 }
