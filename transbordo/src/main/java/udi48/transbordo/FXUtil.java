@@ -1,8 +1,3 @@
-/*
-//=================================================================
-// Copyright © Adaptive. Todos os Direitos Reservados.
-//=================================================================
- */
 package udi48.transbordo;
 
 import java.util.function.UnaryOperator;
@@ -15,10 +10,6 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 
-/**
- *
- * @author Vitor B. Gonçalves <vitor.borges@adaptivesoft.com.br>
- */
 public class FXUtil {
 
     public static TextFormatter<Object> textFormatterDouble() {

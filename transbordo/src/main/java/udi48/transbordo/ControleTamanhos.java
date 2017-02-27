@@ -1,14 +1,5 @@
-/*
-//=================================================================
-// Copyright © Adaptive. Todos os Direitos Reservados.
-//=================================================================
- */
 package udi48.transbordo;
 
-/**
- *
- * @author Vitor B. Gonçalves <vitor.borges@adaptivesoft.com.br>
- */
 public class ControleTamanhos {
 
     public final static double ALTURA = 550; //768
